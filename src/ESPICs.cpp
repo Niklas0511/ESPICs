@@ -5,65 +5,101 @@ const char* ntpServer = "de.pool.ntp.org";
 struct tm timeinfo;
 const int maxTermine = 25;
 String termine[maxTermine][3];
+const int maxSyncTermine = 200;
+String syncTermine[maxSyncTermine][3];
 static char* URL;
 void ESPICs::init(char* URLCalendar) {
     URL = URLCalendar;
 }
-void ESPICs::compactTermine() {
+void ESPICs::compactTermine(String ptermine[maxSyncTermine][3]) {
     int writeIndex = 0;
 
-    for (int i = 0; i < maxTermine; i++) {
-        if (termine[i][1] != "") {
+    for (int i = 0; i < maxSyncTermine; i++) {
+        if (ptermine[i][1] != "") {
             if (i != writeIndex) {
-                termine[writeIndex][0] = termine[i][0];
-                termine[writeIndex][1] = termine[i][1];
-                termine[writeIndex][2] = termine[i][2];
+                ptermine[writeIndex][0] = ptermine[i][0];
+                ptermine[writeIndex][1] = ptermine[i][1];
+                ptermine[writeIndex][2] = ptermine[i][2];
 
-                termine[i][0] = "";
-                termine[i][1] = "";
-                termine[i][2] = "";
+                ptermine[i][0] = "";
+                ptermine[i][1] = "";
+                ptermine[i][2] = "";
             }
             writeIndex++;
         }
     }
+    sortTermine(ptermine);
 }
-void ESPICs::sortTermine() {
-    for (int i = 0; i < maxTermine - 1; i++) {
-        for (int j = 0; j < maxTermine - i - 1; j++) {
-            if (termine[j][1] == "" || termine[j + 1][1] == "") {
+void ESPICs::printTermine() {
+    Serial.println("=== Termine ===");
+
+    for (int i = 0; i < maxTermine; i++) {
+
+        if (termine[i][0] == "") {
+            continue;
+        }
+
+        Serial.print("Termin ");
+        Serial.println(i);
+
+        Serial.print("  Name: ");
+        Serial.println(termine[i][0]);
+
+        Serial.print("  Start:  ");
+        Serial.println(termine[i][1]);
+
+        Serial.print("  Ende:  ");
+        Serial.println(termine[i][2]);
+
+        Serial.println("----------------------");
+    }
+}
+void ESPICs::sortTermine(String ptermine[maxSyncTermine][3]) {
+    for (int i = 0; i < maxSyncTermine - 1; i++) {
+        for (int j = 0; j < maxSyncTermine - i - 1; j++) {
+            if (ptermine[j][1] == "" || ptermine[j + 1][1] == "") {
                 continue;
             }
 
-            if (termine[j][1] > termine[j + 1][1]) {
+            if (ptermine[j][1] > ptermine[j + 1][1]) {
                 for (int k = 0; k < 3; k++) {
-                    String temp = termine[j][k];
-                    termine[j][k] = termine[j + 1][k];
-                    termine[j + 1][k] = temp;
+                    String temp = ptermine[j][k];
+                    ptermine[j][k] = ptermine[j + 1][k];
+                    ptermine[j + 1][k] = temp;
                 }
             }
         }
     }
+    saveTermine(ptermine);
 }
-void ESPICs::filterNextDays(int Days) {
+void ESPICs::saveTermine(String ptermine[maxTermine][3]) {
+    for (int i = 0; i < maxTermine; i++) {
+        termine[i][0] = ptermine[i][0];
+        termine[i][1] = ptermine[i][1];
+        termine[i][2] = ptermine[i][2];
+    }
+}
+void ESPICs::filterNextDays(int Days,String ptermine[maxSyncTermine][3]) {
     time_t now;
     time(&now);
 
     time_t limit = now + Days * 24 * 60 * 60;
 
-    for (int i = 0; i < maxTermine; i++) {
-        if (termine[i][1] == "") {
+    for (int i = 0; i < maxSyncTermine; i++) {
+        if (ptermine[i][1] == "") {
             continue;
         }
         struct tm t;
-        time_t startTime = parseICalUTC(termine[i][1], &t);
-        time_t endTime = parseICalUTC(termine[i][2], &t);
+        time_t startTime = parseICalUTC(ptermine[i][1], &t);
+        time_t endTime = parseICalUTC(ptermine[i][2], &t);
 
         if (endTime < now || startTime > limit) {
-            termine[i][0] = "";
-            termine[i][1] = "";
-            termine[i][2] = "";
+            ptermine[i][0] = "";
+            ptermine[i][1] = "";
+            ptermine[i][2] = "";
         }
     }
+    compactTermine(ptermine);
 }
 time_t ESPICs::parseICalUTC(String s, struct tm* t) {
     if (s.length() < 16) return 0;
@@ -106,9 +142,7 @@ int ESPICs::syncTime() {
     return 0;
 }
 int ESPICs::getStatus(String* TitleNow, struct tm* TEndNow, String* TitleNext, struct tm* TBegNext) {
-    filterNextDays(7);
-    compactTermine();
-    sortTermine();
+    filterNextDays(7,termine);
     int result;
     time_t startTime = parseICalUTC(termine[0][1], TEndNow);
     time_t endTime = parseICalUTC(termine[0][2], TEndNow);
@@ -144,10 +178,10 @@ int ESPICs::syncCal() {
         http.end();
         // Termine [2][] soll folgendermassen mit den ICal daten des Payloads gefüllt werden:
         //Startzeit | Endzeit
-        for (int i = 0; i < maxTermine; i++) {
-            termine[i][0] = "";
-            termine[i][1] = "";
-            termine[i][2] = "";
+        for (int i = 0; i < maxSyncTermine; i++) {
+            syncTermine[i][0] = "";
+            syncTermine[i][1] = "";
+            syncTermine[i][2] = "";
         }
         Serial.println("Cleared");
         int eventIndex = -1;
@@ -160,31 +194,32 @@ int ESPICs::syncCal() {
             }
 
             String line = payload.substring(pos, nextPos);
-            line.trim();  // entfernt \r und Leerzeichen
+            line.trim();
             if (line == "BEGIN:VEVENT") {
                 eventIndex++;
-                if (eventIndex >= maxTermine) {
+                if (eventIndex >= maxSyncTermine) {
                     break;
                 }
             } else if (eventIndex >= 0 && line.startsWith("DTSTART")) {
                 int sep = line.indexOf(':');
                 if (sep != -1) {
-                    termine[eventIndex][1] = line.substring(sep + 1);
+                    syncTermine[eventIndex][1] = line.substring(sep + 1);
                 }
             } else if (eventIndex >= 0 && line.startsWith("DTEND")) {
                 int sep = line.indexOf(':');
                 if (sep != -1) {
-                    termine[eventIndex][2] = line.substring(sep + 1);
+                    syncTermine[eventIndex][2] = line.substring(sep + 1);
                 }
             } else if (eventIndex >= 0 && line.startsWith("SUMMARY")) {
                 int sep = line.indexOf(':');
                 if (sep != -1) {
-                    termine[eventIndex][0] = line.substring(sep + 1);
+                    syncTermine[eventIndex][0] = line.substring(sep + 1);
                 }
             }
 
             pos = nextPos + 1;
         }
+        filterNextDays(7,syncTermine);
         return 0;
     } else {
         return 100;

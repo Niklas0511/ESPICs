@@ -5,6 +5,7 @@
 
 class ESPICs {
 public:
+    static void printTermine();
     static void init(char *URLCalendar);
     static time_t parseICalUTC(String s, struct tm* t);
     static int syncTime();
@@ -12,9 +13,10 @@ public:
     static int getStatus(String* TitleNow, struct tm* TEndNow, String* TitleNext, struct tm* TBegNext);
 
 private:
-    static void filterNextDays(int days);
-    static void compactTermine();
-    static void sortTermine();
+    static void filterNextDays(int days,String ptermine[maxSyncTermine][3]);
+    static void compactTermine(String ptermine[maxSyncTermine][3]);
+    static void sortTermine(String ptermine[maxSyncTermine][3]);
+    static void saveTermine(String ptermine[maxTermine][3])
 };
 
 #endif //ESPICS_ESPICS_H
