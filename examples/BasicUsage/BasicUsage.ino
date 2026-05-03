@@ -39,12 +39,12 @@ void loop() {
 }
 int connectWiFi() {
   WiFi.begin(ssid, password);
-  Serial.print("WLAN-Verbindung wird hergestellt...");
+  Serial.print("Connecting to WiFi...");
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
 
-  Serial.println("\nVerbunden mit dem WLAN");
+  Serial.println("\nWiFi connected");
   return 0;
 }
