@@ -7,10 +7,16 @@ const int maxTermine = 25;
 String termine[maxTermine][3];
 const int maxSyncTermine = 200;
 String syncTermine[maxSyncTermine][3];
+const char* TimeZone = "CET-1CEST,M3.5.0,M10.5.0/3";
 static char* URL;
 void ESPICs::init(char* URLCalendar) {
     URL = URLCalendar;
 }
+
+void ESPICs::setTimezone(const char* timezone = "CET-1CEST,M3.5.0,M10.5.0/3") {
+    TimeZone = timezone;
+}
+
 void ESPICs::compactTermine(String ptermine[][3], int length) {
     int writeIndex = 0;
 
@@ -118,7 +124,7 @@ time_t ESPICs::parseICalUTC(String s, struct tm* t) {
 
     time_t result = mktime(t);
 
-    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+    setenv("TZ", TimeZone, 1);
     tzset();
 
     return result;
@@ -130,7 +136,7 @@ int ESPICs::syncTime() {
         Serial.println("Waiting for NTP time...");
         delay(100);
     }
-    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+    setenv("TZ", TimeZone, 1);
     tzset();
     getLocalTime(&timeinfo);
     Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
@@ -157,6 +163,29 @@ int ESPICs::getStatus(String* TitleNow, struct tm* TEndNow, String* TitleNext, s
         result = 0;
         *TitleNext = termine [0][0];
         localtime_r(&startTime, TBegNext);
+    }
+
+    return result;
+}
+int ESPICs::getStatusRaw(String* TitleNow, String* TEndNow, String* TitleNext, String* TBegNext) {
+    filterNextDays(7,termine,maxTermine);
+    int result;
+    struct tm temp;
+    time_t startTime = parseICalUTC(termine[0][1], &temp);
+    time_t endTime = parseICalUTC(termine[0][2], &temp);
+    time_t now;
+    time(&now);
+
+    if (startTime < now && endTime > now) {
+        result = 1;
+        *TitleNow = termine[0][0];
+        *TitleNext = termine[1][0];
+        *TEndNow = termine[0][2];
+        *TBegNext = termine[1][1];
+    }else {
+        result = 0;
+        *TitleNext = termine [0][0];
+        *TBegNext = termine [0][1];
     }
 
     return result;

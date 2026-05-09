@@ -9,11 +9,13 @@ public:
     static const int maxSyncTermine = 200;
 
     static void printTermine();
+    static void setTimezone(const char* timezone);
     static void init(char *URLCalendar);
     static time_t parseICalUTC(String s, struct tm* t);
     static int syncTime();
     static int syncCal();
     static int getStatus(String* TitleNow, struct tm* TEndNow, String* TitleNext, struct tm* TBegNext);
+    static int getStatusRaw(String* TitleNow, String* TEndNow, String* TitleNext, String* TBegNext);
 
 private:
     static void filterNextDays(int days,String ptermine[][3], int length);

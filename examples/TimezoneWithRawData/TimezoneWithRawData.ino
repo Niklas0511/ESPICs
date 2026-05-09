@@ -6,7 +6,7 @@ const char* password = ""; //Your WiFi Password
 char* cURL = "";//Your Calendar URL
 ESPICs CalHelper;
 String titleNow, titleNext;
-struct tm TEndNow, TBegNext;
+String TEndNow, TBegNext;
 void setup() {
   Serial.begin(115200);
   Serial.println("Start");
@@ -20,23 +20,22 @@ void setup() {
 }
 
 void loop() {
-  
-  if(CalHelper.getStatus(&titleNow, &TEndNow, &titleNext, &TBegNext) == 0){
+    if(CalHelper.getStatusRaw(&titleNow, &TEndNow, &titleNext, &TBegNext) == 0){
     Serial.print("free, Next Event: ");
     Serial.println(titleNext);
     Serial.print("Starts at:");
-    Serial.println(&TBegNext, "%A, %B %d %Y %H:%M:%S");
+    Serial.println(TBegNext);
   }else{
     Serial.print("occupied with:");
     Serial.println(titleNow);
     Serial.print("Event ends:");
-    Serial.println(&TEndNow, "%A, %B %d %Y %H:%M:%S");
+    Serial.println(TEndNow);
     Serial.print("Next Event: ");
     Serial.println(titleNext);
     Serial.print("Starts at:");
-    Serial.println(&TBegNext, "%A, %B %d %Y %H:%M:%S");
-  }
-  delay(20000);
+    Serial.println(TBegNext);
+  }  
+  delay(2000);
 }
 int connectWiFi() {
   WiFi.begin(ssid, password);
