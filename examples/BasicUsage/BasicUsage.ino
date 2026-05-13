@@ -6,7 +6,7 @@ const char* password = ""; //Your WiFi Password
 char* cURL = "";//Your Calendar URL
 ESPICs CalHelper;
 String titleNow, titleNext;
-struct tm TEndNow, TBegNext;
+struct tm TBegNow, TEndNow, TBegNext, TEndNext;
 void setup() {
   Serial.begin(115200);
   Serial.println("Start");
@@ -15,26 +15,31 @@ void setup() {
   CalHelper.syncTime();
   CalHelper.syncCal();
   CalHelper.printTermine();
-  CalHelper.setTimezone("UTC");
 
 }
 
 void loop() {
   
-  if(CalHelper.getStatus(&titleNow, &TEndNow, &titleNext, &TBegNext) == 0){
+  if(CalHelper.getStatus(&titleNow,&TBegNow, &TEndNow, &titleNext, &TBegNext, &TEndNext) == 0){
     Serial.print("free, Next Event: ");
     Serial.println(titleNext);
     Serial.print("Starts at:");
     Serial.println(&TBegNext, "%A, %B %d %Y %H:%M:%S");
+    Serial.print("Ends at:");
+    Serial.println(&TEndNext, "%A, %B %d %Y %H:%M:%S");
   }else{
     Serial.print("occupied with:");
     Serial.println(titleNow);
+    Serial.print("Event began:");
+    Serial.println(&TBegNow, "%A, %B %d %Y %H:%M:%S");
     Serial.print("Event ends:");
     Serial.println(&TEndNow, "%A, %B %d %Y %H:%M:%S");
     Serial.print("Next Event: ");
     Serial.println(titleNext);
     Serial.print("Starts at:");
     Serial.println(&TBegNext, "%A, %B %d %Y %H:%M:%S");
+    Serial.print("Ends at:");
+    Serial.println(&TEndNext, "%A, %B %d %Y %H:%M:%S");
   }
   delay(20000);
 }

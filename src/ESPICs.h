@@ -14,7 +14,7 @@ public:
     static time_t parseICalUTC(String s, struct tm* t);
     static int syncTime();
     static int syncCal();
-    static int getStatus(String* TitleNow, struct tm* TEndNow, String* TitleNext, struct tm* TBegNext);
+    static int getStatus(String* TitleNow,struct tm* TBegNow, struct tm* TEndNow, String* TitleNext, struct tm* TBegNext, struct tm* TEndNext);
     static int getStatusRaw(String* TitleNow, String* TEndNow, String* TitleNext, String* TBegNext);
 
 private:

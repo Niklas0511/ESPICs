@@ -98,7 +98,6 @@ void ESPICs::filterNextDays(int Days,String ptermine[][3], int length) {
         struct tm t;
         time_t startTime = parseICalUTC(ptermine[i][1], &t);
         time_t endTime = parseICalUTC(ptermine[i][2], &t);
-
         if (endTime < now || startTime > limit) {
             ptermine[i][0] = "";
             ptermine[i][1] = "";
@@ -142,27 +141,33 @@ int ESPICs::syncTime() {
     Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
     return 0;
 }
-int ESPICs::getStatus(String* TitleNow, struct tm* TEndNow, String* TitleNext, struct tm* TBegNext) {
+int ESPICs::getStatus(String* TitleNow,struct tm* TBegNow, struct tm* TEndNow, String* TitleNext, struct tm* TBegNext, struct tm* TEndNext) {
     filterNextDays(7,termine,maxTermine);
     int result;
     struct tm temp;
     time_t startTime = parseICalUTC(termine[0][1], &temp);
     time_t endTime = parseICalUTC(termine[0][2], &temp);
-    time_t now;
+    time_t now, ptime;
     time(&now);
 
     if (startTime < now && endTime > now) {
         result = 1;
         *TitleNow = termine[0][0];
         *TitleNext = termine[1][0];
+        ptime = parseICalUTC(termine[0][1], &temp);
+        localtime_r(&ptime, TBegNow);
         localtime_r(&endTime, TEndNow);
 
         time_t nextStart = parseICalUTC(termine[1][1], &temp);
         localtime_r(&nextStart, TBegNext);
+        ptime = parseICalUTC(termine[1][2], &temp);
+        localtime_r(&ptime, TEndNext);
     }else {
         result = 0;
         *TitleNext = termine [0][0];
         localtime_r(&startTime, TBegNext);
+        ptime = parseICalUTC(termine[0][2], &temp);
+        localtime_r(&ptime, TEndNext);
     }
 
     return result;
@@ -202,7 +207,6 @@ int ESPICs::syncCal() {
             return 1000 + httpCode;
         }
         http.end();
-
         for (int i = 0; i < maxSyncTermine; i++) {
             syncTermine[i][0] = "";
             syncTermine[i][1] = "";
