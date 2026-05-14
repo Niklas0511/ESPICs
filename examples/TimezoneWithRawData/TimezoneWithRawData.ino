@@ -6,7 +6,7 @@ const char* password = ""; //Your WiFi Password
 char* cURL = "";//Your Calendar URL
 ESPICs CalHelper;
 String titleNow, titleNext;
-String TEndNow, TBegNext;
+String TBegNow, TEndNow, TBegNext, TEndNext;
 void setup() {
   Serial.begin(115200);
   Serial.println("Start");
@@ -20,20 +20,27 @@ void setup() {
 }
 
 void loop() {
-    if(CalHelper.getStatusRaw(&titleNow, &TEndNow, &titleNext, &TBegNext) == 0){
+    if(CalHelper.getStatusRaw(&titleNow,&TBegNow, &TEndNow, &titleNext, &TBegNext, &TEndNext) == 0){
     Serial.print("free, Next Event: ");
     Serial.println(titleNext);
     Serial.print("Starts at:");
     Serial.println(TBegNext);
+    Serial.print("Ends at:");
+    Serial.println(TEndNext);
   }else{
     Serial.print("occupied with:");
     Serial.println(titleNow);
+    Serial.print("Startet at: ");
+    Serial.println(TBegNow);
     Serial.print("Event ends:");
     Serial.println(TEndNow);
     Serial.print("Next Event: ");
     Serial.println(titleNext);
     Serial.print("Starts at:");
     Serial.println(TBegNext);
+    Serial.print("Ends at:");
+    Serial.println(TEndNext);
+
   }  
   delay(2000);
 }

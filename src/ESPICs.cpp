@@ -172,7 +172,7 @@ int ESPICs::getStatus(String* TitleNow,struct tm* TBegNow, struct tm* TEndNow, S
 
     return result;
 }
-int ESPICs::getStatusRaw(String* TitleNow, String* TEndNow, String* TitleNext, String* TBegNext) {
+int ESPICs::getStatusRaw(String* TitleNow,String* TBegNow, String* TEndNow, String* TitleNext, String* TBegNext, String* TEndNext) {
     filterNextDays(7,termine,maxTermine);
     int result;
     struct tm temp;
@@ -185,12 +185,15 @@ int ESPICs::getStatusRaw(String* TitleNow, String* TEndNow, String* TitleNext, S
         result = 1;
         *TitleNow = termine[0][0];
         *TitleNext = termine[1][0];
+        *TBegNow = termine[0][1];
         *TEndNow = termine[0][2];
         *TBegNext = termine[1][1];
+        *TEndNext = termine[1][2];
     }else {
         result = 0;
         *TitleNext = termine [0][0];
         *TBegNext = termine [0][1];
+        *TEndNext = termine [0][2];
     }
 
     return result;

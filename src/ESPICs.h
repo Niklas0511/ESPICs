@@ -15,7 +15,7 @@ public:
     static int syncTime();
     static int syncCal();
     static int getStatus(String* TitleNow,struct tm* TBegNow, struct tm* TEndNow, String* TitleNext, struct tm* TBegNext, struct tm* TEndNext);
-    static int getStatusRaw(String* TitleNow, String* TEndNow, String* TitleNext, String* TBegNext);
+    static int getStatusRaw(String* TitleNow,String* TBegNow, String* TEndNow, String* TitleNext, String* TBegNext, String* TEndNext);
 
 private:
     static void filterNextDays(int days,String ptermine[][3], int length);
